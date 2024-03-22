@@ -16,3 +16,4 @@ class CO2Value(models.Model):
 
     def __str__(self):
         return f"{self.country_code} - {self.years}: {self.value}"
+
