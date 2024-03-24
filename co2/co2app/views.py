@@ -1,7 +1,9 @@
-# views.py
 from django.shortcuts import render
+from django.conf import settings
 from co2app.models import CountryName, CO2Value
 import plotly.graph_objs as go
+import folium
+import os
 
 
 def main_page(request):
@@ -43,11 +45,6 @@ def compare_countries(request):
         return render(request, 'compare_countries.html', {'countries': countries, 'all_years': all_years})
 
 
-def show_on_map(request):
-    # Add functionality to show countries on a map
-    return render(request, 'show_on_map.html')
-
-
 def generate_graph(data_country1, data_country2, country1_name, country2_name):
     try:
         years_country1 = [row[0] for row in data_country1]  # Extract years for country 1
@@ -70,3 +67,44 @@ def generate_graph(data_country1, data_country2, country1_name, country2_name):
 
     except Exception as e:  # Catch any exceptions
         return f"Error generating graph: {e}"  # Return error message if graph generation fails
+
+
+def show_on_map(request):
+    # Create a Folium map
+    m = folium.Map(location=(30, 10), zoom_start=2, tiles="cartodb positron")
+
+    # Load political country boundaries GeoJSON data from static folder
+    geojson_path = os.path.join(settings.STATIC_ROOT, 'geojson', 'ne_50m_admin_0_countries.geojson')
+
+    # Fetch CO2 values for each country for the selected year (default: 2020)
+    selected_year = int(request.GET.get('year', 2020))
+    eco_footprints = []
+    for country in CountryName.objects.all():
+        try:
+            co2_value = CO2Value.objects.get(country_code=country.country_code, years=selected_year)
+            eco_footprints.append({'country_name': country.country_name, 'value': float(co2_value.value)})
+        except CO2Value.DoesNotExist:
+            pass  # Skip countries without CO2 data for the selected year
+
+    # Convert the data to a list of tuples (country name, value)
+    eco_footprints_data = [(entry['country_name'], entry['value']) for entry in eco_footprints]
+
+    # Add Choropleth layer to the map
+    folium.Choropleth(
+        geo_data=geojson_path,
+        data=eco_footprints_data,
+        columns=["country_name", "value"],
+        key_on="feature.properties.name",
+        fill_color="YlGn",
+        fill_opacity=0.7,
+        line_opacity=0.2,
+        legend_name="CO2 Emissions"
+    ).add_to(m)
+
+    # Get list of years for the dropdown
+    years_list = list(range(1990, 2021))
+
+    # Get HTML representation of the map
+    m_html = m._repr_html_()
+
+    return render(request, 'show_on_map.html', {'map_html': m_html, 'selected_year': selected_year, 'years_list': years_list})
