@@ -92,16 +92,23 @@ def show_on_map(request):
         # Convert the data to a list of tuples (country name, value)
         eco_footprints_data = [(entry['country_name'], entry['value']) for entry in eco_footprints]
 
+        # Calculate max_eco_footprint
+        max_eco_footprint = max(entry['value'] for entry in eco_footprints)
+
+        # Define bins for the choropleth map
+        bins = [0, 1, 1.5, 2, 3, 4, 5, 6, 7, 8, max_eco_footprint]
+
         # Add Choropleth layer to the map
         folium.Choropleth(
             geo_data=geojson_path,
             data=eco_footprints_data,
             columns=["country_name", "value"],
             key_on="feature.properties.name",
-            fill_color="YlGn",
-            fill_opacity=0.7,
-            line_opacity=0.2,
-            legend_name="CO2 Emissions"
+            fill_color="RdYlGn_r",
+            fill_opacity=0.8,
+            line_opacity=0.3,
+            legend_name="CO2 Emissions",
+            bins=bins  # Assign bins
         ).add_to(m)
 
         # Get HTML representation of the map
