@@ -70,41 +70,41 @@ def generate_graph(data_country1, data_country2, country1_name, country2_name):
 
 
 def show_on_map(request):
-    # Create a Folium map
-    m = folium.Map(location=(30, 10), zoom_start=2, tiles="cartodb positron")
+    if request.method == 'GET':
+        selected_year = int(request.GET.get('year', 1990))
+        years_list = list(range(1990, 2021))
 
-    # Load political country boundaries GeoJSON data from static folder
-    geojson_path = os.path.join(settings.STATIC_ROOT, 'geojson', 'ne_50m_admin_0_countries.geojson')
+        # Create a Folium map
+        m = folium.Map(location=(30, 10), zoom_start=2, tiles="cartodb positron")
 
-    # Fetch CO2 values for each country for the selected year (default: 2020)
-    selected_year = int(request.GET.get('year', 2020))
-    eco_footprints = []
-    for country in CountryName.objects.all():
-        try:
-            co2_value = CO2Value.objects.get(country_code=country.country_code, years=selected_year)
-            eco_footprints.append({'country_name': country.country_name, 'value': float(co2_value.value)})
-        except CO2Value.DoesNotExist:
-            pass  # Skip countries without CO2 data for the selected year
+        # Load political country boundaries GeoJSON data from static folder
+        geojson_path = os.path.join(settings.STATIC_ROOT, 'geojson', 'ne_50m_admin_0_countries.geojson')
 
-    # Convert the data to a list of tuples (country name, value)
-    eco_footprints_data = [(entry['country_name'], entry['value']) for entry in eco_footprints]
+        # Fetch CO2 values for each country for the selected year
+        eco_footprints = []
+        for country in CountryName.objects.all():
+            try:
+                co2_value = CO2Value.objects.get(country_code=country.country_code, years=selected_year)
+                eco_footprints.append({'country_name': country.country_name, 'value': float(co2_value.value)})
+            except CO2Value.DoesNotExist:
+                pass  # Skip countries without CO2 data for the selected year
 
-    # Add Choropleth layer to the map
-    folium.Choropleth(
-        geo_data=geojson_path,
-        data=eco_footprints_data,
-        columns=["country_name", "value"],
-        key_on="feature.properties.name",
-        fill_color="YlGn",
-        fill_opacity=0.7,
-        line_opacity=0.2,
-        legend_name="CO2 Emissions"
-    ).add_to(m)
+        # Convert the data to a list of tuples (country name, value)
+        eco_footprints_data = [(entry['country_name'], entry['value']) for entry in eco_footprints]
 
-    # Get list of years for the dropdown
-    years_list = list(range(1990, 2021))
+        # Add Choropleth layer to the map
+        folium.Choropleth(
+            geo_data=geojson_path,
+            data=eco_footprints_data,
+            columns=["country_name", "value"],
+            key_on="feature.properties.name",
+            fill_color="YlGn",
+            fill_opacity=0.7,
+            line_opacity=0.2,
+            legend_name="CO2 Emissions"
+        ).add_to(m)
 
-    # Get HTML representation of the map
-    m_html = m._repr_html_()
+        # Get HTML representation of the map
+        m_html = m._repr_html_()
 
-    return render(request, 'show_on_map.html', {'map_html': m_html, 'selected_year': selected_year, 'years_list': years_list})
+        return render(request, 'show_on_map.html', {'map_html': m_html, 'selected_year': selected_year, 'years_list': years_list})

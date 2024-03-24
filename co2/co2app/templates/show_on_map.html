@@ -13,34 +13,22 @@
     <div class="container mt-5">
         <h1>Show on Map</h1>
         <!-- Year selection dropdown -->
-        <div class="form-group">
-            <label for="yearSelect">Select Year:</label>
-            <select class="form-control" id="yearSelect" name="year">
-                {% for year in years_list %}
-                    <option value="{{ year }}" {% if year == selected_year %} selected {% endif %}>{{ year }}</option>
-                {% endfor %}
-            </select>
-        </div>
+        <form action="" method="get">
+            <div class="form-group">
+                <label for="yearSelect">Select Year:</label>
+                <select class="form-control" id="yearSelect" name="year">
+                    {% for year in years_list %}
+                        <option value="{{ year }}" {% if year == selected_year %} selected {% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Show on map</button>
+        </form>
 
         <!-- Embed Folium map HTML here -->
         <div id="map-container" class="mt-3">
             {{ map_html | safe }}
         </div>
     </div>
-
-    <!-- Folium JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/folium@0.12.1/folium.js"></script>
-
-    <script>
-        // Update the selected year when the dropdown value changes
-        const yearSelect = document.getElementById('yearSelect');
-
-        yearSelect.addEventListener('change', function() {
-            // Get the selected year
-            const selectedYear = this.value;
-            // Reload the page with the selected year
-            window.location.href = `?year=${selectedYear}`;
-        });
-    </script>
 </body>
 </html>
