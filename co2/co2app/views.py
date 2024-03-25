@@ -85,12 +85,12 @@ def show_on_map(request):
         for country in CountryName.objects.all():
             try:
                 co2_value = CO2Value.objects.get(country_code=country.country_code, years=selected_year)
-                eco_footprints.append({'country_name': country.country_name, 'value': float(co2_value.value)})
+                eco_footprints.append({'name': country.country_name, 'value': float(co2_value.value)})
             except CO2Value.DoesNotExist:
                 pass  # Skip countries without CO2 data for the selected year
 
         # Convert the data to a list of tuples (country name, value)
-        eco_footprints_data = [(entry['country_name'], entry['value']) for entry in eco_footprints]
+        eco_footprints_data = [(entry['name'], entry['value']) for entry in eco_footprints]
 
         # Calculate max_eco_footprint
         max_eco_footprint = max(entry['value'] for entry in eco_footprints)
@@ -99,19 +99,22 @@ def show_on_map(request):
         bins = [0, 1, 1.5, 2, 3, 4, 5, 6, 7, 8, max_eco_footprint]
 
         # Add Choropleth layer to the map
-        folium.Choropleth(
+        choropleth = folium.Choropleth(
             geo_data=geojson_path,
             data=eco_footprints_data,
-            columns=["country_name", "value"],
+            columns=["name", "value"],
             key_on="feature.properties.name",
             fill_color="RdYlGn_r",
             fill_opacity=0.8,
             line_opacity=0.3,
             nan_fill_color="white",
-
             legend_name="CO2 Emissions",
+            highlight=True,
             bins=bins  # Assign bins
         ).add_to(m)
+
+        # Add tooltips to the choropleth map
+        choropleth.geojson.add_child(folium.features.GeoJsonTooltip(['name'], labels=False))
 
         # Get HTML representation of the map
         m_html = m._repr_html_()
