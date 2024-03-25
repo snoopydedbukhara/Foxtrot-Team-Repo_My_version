@@ -78,7 +78,7 @@ def show_on_map(request):
         m = folium.Map(location=(30, 10), zoom_start=2, tiles="cartodb positron")
 
         # Load political country boundaries GeoJSON data from static folder
-        geojson_path = os.path.join(settings.STATIC_ROOT, 'geojson', 'ne_50m_admin_0_countries.geojson')
+        geojson_path = os.path.join(settings.STATIC_ROOT, 'geojson', 'ne_50mmm_admin_0_countries.geojson')
 
         # Fetch CO2 values for each country for the selected year
         eco_footprints = []
