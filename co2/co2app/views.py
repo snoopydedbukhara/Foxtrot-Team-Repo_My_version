@@ -108,6 +108,7 @@ def show_on_map(request):
             fill_opacity=0.8,
             line_opacity=0.3,
             nan_fill_color="white",
+
             legend_name="CO2 Emissions",
             bins=bins  # Assign bins
         ).add_to(m)
